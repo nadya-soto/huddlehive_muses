@@ -409,7 +409,6 @@ def get_accessibility_features():
 def add_reviews():
     data = request.get_json()
 
-    # Ensure input is a list for batch support
     if not isinstance(data, list):
         data = [data]
 
@@ -426,8 +425,6 @@ def add_reviews():
                 "error": f"Missing required fields: {', '.join(missing)}"
             })
             continue
-
-        # Validate user and space
         user = User.query.get(entry['user_id'])
         space = Space.query.get(entry['space_id'])
 
@@ -438,7 +435,6 @@ def add_reviews():
             })
             continue
 
-        # Optional fields
         rating = entry['rating']
         comment = entry.get('comment', '')
 
@@ -483,13 +479,12 @@ def get_space_details(space_id):
     def average_rating(reviews):
         if not reviews:
             return None
-        # Only consider reviews with a rating
+        
         valid_ratings = [r.rating for r in reviews if r.rating is not None]
         if not valid_ratings:
             return None
         return round(sum(valid_ratings) / len(valid_ratings), 1)
 
-    # Serialize reviews
     reviews_data = [
         {
             "id": review.id,
@@ -527,6 +522,44 @@ def get_space_details(space_id):
             "reviews": reviews_data  # Add the reviews here
         }
     })
+
+@app.route('/spaces', methods=['GET'])
+def get_spaces():
+    spaces = Space.query.all()
+
+    def average_rating(reviews):
+        if not reviews:
+            return None
+        return round(sum(r.rating for r in reviews if r.rating is not None) / len(reviews), 1)
+
+    results = []
+    for space in spaces:
+        results.append({
+            "id": space.id,
+            "name": space.name,
+            "type": space.type,
+            "category": space.category,
+            "address": space.address,
+            "description": space.description,
+            "website": space.website,
+            "phone": space.phone,
+            "rating": average_rating(space.reviews),
+            "reviewCount": len(space.reviews),
+            "distance": "",  # Client-side or GPS logic placeholder
+            "images": [],    # Add image logic if applicable
+            "features": [f.name for f in space.features],
+            "indoor": space.indoor,
+            "outdoor": space.outdoor,
+            "wifi": space.wifi,
+            "parking": space.parking,
+            "coordinates": [space.latitude, space.longitude] if space.latitude and space.longitude else [],
+            "hours": {},  # Placeholder for future use
+            "ownerId": space.created_by,
+            "createdBy": space.creator.name if space.creator else None
+        })
+
+    return jsonify({"spaces": results}), 200
+
 
 
 if __name__ == "__main__":
