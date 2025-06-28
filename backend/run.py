@@ -36,6 +36,7 @@ class Space(db.Model):
     type = db.Column(db.String(100), nullable=False)
     category = db.Column(db.String(100), nullable=False)
     address = db.Column(db.Text, nullable=False)
+    contactEmail = db.Column(db.Text, nullable=True)
     description = db.Column(db.Text)
     website = db.Column(db.String(255))
     phone = db.Column(db.String(50))
@@ -153,7 +154,7 @@ def add_space():
         category=data['category'],
         address=data['address'],
         description=data['description'],
-        contact_email=data['contactEmail'],
+        contactEmail=data['contactEmail'],
         website=website,
         phone=phone,
         indoor=indoor,
