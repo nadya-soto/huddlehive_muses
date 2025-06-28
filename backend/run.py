@@ -1,4 +1,4 @@
-import json
+
 from datetime import datetime
 from flask import Flask, jsonify, request
 from flask_sqlalchemy import SQLAlchemy
@@ -34,6 +34,7 @@ class Space(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(255), nullable=False)
     type = db.Column(db.String(100), nullable=False)
+    category = db.Column(db.String(100), nullable=False)
     address = db.Column(db.Text, nullable=False)
     description = db.Column(db.Text)
     website = db.Column(db.String(255))
@@ -83,7 +84,6 @@ def home():
     return jsonify(message="Welcome to the Hidden Spaces API")
 
 
-
 @app.route('/register', methods=['POST'])
 def register():
     data = request.get_json()
@@ -127,34 +127,47 @@ def login():
 @app.route('/spaces/add', methods=['POST'])
 def add_space():
     data = request.get_json()
-    required_fields = ['name', 'type', 'address', 'created_by']
-    if not all(field in data for field in required_fields):
-        return output_error(400, "Missing required fields")
-
     # Check user exists
     user = User.query.get(data['created_by'])
     if not user:
         return output_error(404, "User not found")
 
-    space = Space(
+    required_fields = ['name', 'type', 'category', 'address', 'description', 'contactEmail']
+    missing_fields = [field for field in required_fields if field not in data]
+
+    if missing_fields:
+        return jsonify({'error': f'Missing required fields: {", ".join(missing_fields)}'}), 400
+    
+    website = data.get('website')
+    phone = data.get('phone')
+    features = data.get('features', [])
+    indoor = data.get('indoor', True)
+    outdoor = data.get('outdoor', False)
+    wifi = data.get('wifi', False)
+    parking = data.get('parking', False)
+
+   
+    new_space = Space(
         name=data['name'],
         type=data['type'],
+        category=data['category'],
         address=data['address'],
-        description=data.get('description'),
-        website=data.get('website'),
-        phone=data.get('phone'),
-        latitude=data.get('latitude'),
-        longitude=data.get('longitude'),
-        indoor=data.get('indoor', True),
-        outdoor=data.get('outdoor', False),
-        wifi=data.get('wifi', False),
-        parking=data.get('parking', False),
-        created_by=user.id
+        description=data['description'],
+        contact_email=data['contactEmail'],
+        website=website,
+        phone=phone,
+        indoor=indoor,
+        outdoor=outdoor,
+        wifi=wifi,
+        parking=parking,
+        created_by = user.id
     )
-    db.session.add(space)
+
+    db.session.add(new_space)
     db.session.commit()
 
-    return jsonify({"message": "Space added", "space_id": space.id}), 201
+    return jsonify({'message': f"Space '{new_space.name}' created successfully.", 'space_id': new_space.id}), 201
+
 
 @app.route('/spaces/remove/<int:space_id>', methods=['DELETE'])
 def remove_space(space_id):
@@ -208,7 +221,7 @@ def get_categories():
 
 @app.route('/spaces/categories/<string:category>/spaces', methods=['GET'])
 def get_spaces_in_category(category):
-    spaces = Space.query.filter_by(type=category).all()
+    spaces = Space.query.filter_by(category=category).all()
     spaces_list = [{
         'id': s.id,
         'name': s.name,
