@@ -455,19 +455,6 @@ def error_handler(error):
     return response
 
 
-#number 6 implementation 
-@app.route('/spaces/categories', methods=['GET'])
-def get_categories():
-    features = AccessibilityFeature.query.all()
-    categories = [{
-        "id": f.id,
-        "name": f.name,
-        "description": f.description,
-        "icon": f.icon,
-        "count": len(f.spaces)
-    } for f in features]
-
-    return jsonify({"categories": categories})
 
 #number 8 implementation 
 @app.route('/spaces/<int:space_id>', methods=['GET'])
