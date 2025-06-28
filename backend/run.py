@@ -111,6 +111,45 @@ def register():
     db.session.commit()
     return jsonify({"message": "User registered successfully", "user_id": user.id}), 201
 
+@app.route('/register/many', methods=['POST'])
+def register_many():
+    data = request.get_json()
+
+    if isinstance(data, dict):
+        data = [data] 
+
+    created_users = []
+
+    for user_data in data:
+        required_fields = ['email', 'name', 'ethnicity', 'language', 'hobby', 'gender', 'age', 'city', 'sexual_orientation', 'password']
+        if not all(field in user_data for field in required_fields):
+            return output_error(400, f"Missing required fields in: {user_data.get('email', 'Unknown')}")
+
+        if User.query.filter_by(email=user_data['email']).first():
+            continue  # Skip already-registered emails
+
+        user = User(
+            email=user_data['email'],
+            name=user_data['name'],
+            ethnicity=user_data['ethnicity'],
+            language=user_data['language'],
+            hobby=user_data['hobby'],
+            gender=user_data['gender'],
+            age=user_data['age'],
+            city=user_data['city'],
+            sexual_orientation=user_data['sexual_orientation'],
+            password_hash=user_data['password']
+        )
+
+        db.session.add(user)
+        created_users.append(user)
+
+    db.session.commit()
+
+    return jsonify({
+        "message": f"{len(created_users)} user(s) registered successfully",
+        "users": [{"id": u.id, "email": u.email} for u in created_users]
+    }), 201
 
 @app.route('/login', methods=['POST'])
 def login():
@@ -126,48 +165,61 @@ def login():
 
 
 @app.route('/spaces/add', methods=['POST'])
-def add_space():
+def add_spaces():
     data = request.get_json()
-    # Check user exists
-    user = User.query.get(data['created_by'])
-    if not user:
-        return output_error(404, "User not found")
 
-    required_fields = ['name', 'type', 'category', 'address', 'description', 'contactEmail']
-    missing_fields = [field for field in required_fields if field not in data]
+    if not isinstance(data, list):
+        return jsonify({'error': 'Request body must be a list of space objects.'}), 400
 
-    if missing_fields:
-        return jsonify({'error': f'Missing required fields: {", ".join(missing_fields)}'}), 400
-    
-    website = data.get('website')
-    phone = data.get('phone')
-    features = data.get('features', [])
-    indoor = data.get('indoor', True)
-    outdoor = data.get('outdoor', False)
-    wifi = data.get('wifi', False)
-    parking = data.get('parking', False)
+    created_spaces = []
+    errors = []
 
-   
-    new_space = Space(
-        name=data['name'],
-        type=data['type'],
-        category=data['category'],
-        address=data['address'],
-        description=data['description'],
-        contactEmail=data['contactEmail'],
-        website=website,
-        phone=phone,
-        indoor=indoor,
-        outdoor=outdoor,
-        wifi=wifi,
-        parking=parking,
-        created_by = user.id
-    )
+    for idx, item in enumerate(data):
+        # Check user exists
+        user = User.query.get(item.get('created_by'))
+        if not user:
+            errors.append({'index': idx, 'error': 'User not found', 'data': item})
+            continue
 
-    db.session.add(new_space)
+        required_fields = ['name', 'type', 'category', 'address', 'description', 'contactEmail']
+        missing_fields = [field for field in required_fields if field not in item]
+
+        if missing_fields:
+            errors.append({
+                'index': idx,
+                'error': f'Missing required fields: {", ".join(missing_fields)}',
+                'data': item
+            })
+            continue
+
+        space = Space(
+            name=item['name'],
+            type=item['type'],
+            category=item['category'],
+            address=item['address'],
+            description=item['description'],
+            contactEmail=item['contactEmail'],
+            website=item.get('website'),
+            phone=item.get('phone'),
+            indoor=item.get('indoor', True),
+            outdoor=item.get('outdoor', False),
+            wifi=item.get('wifi', False),
+            parking=item.get('parking', False),
+            created_by=user.id
+        )
+
+        db.session.add(space)
+        created_spaces.append(space)
+
     db.session.commit()
 
-    return jsonify({'message': f"Space '{new_space.name}' created successfully.", 'space_id': new_space.id}), 201
+    response = {
+        'created': [{'name': s.name, 'id': s.id} for s in created_spaces],
+        'errors': errors
+    }
+
+    status_code = 207 if errors else 201  # 207: Multi-Status
+    return jsonify(response), status_code
 
 
 @app.route('/spaces/remove/<int:space_id>', methods=['DELETE'])
@@ -214,11 +266,59 @@ def edit_space(space_id):
         'address': space.address
     }})
 
+@app.route('/spaces/<int:space_id>', methods=['GET'])
+def get_space(space_id):
+    space = Space.query.get(space_id)
+
+    if not space:
+        return jsonify({"error": "Space not found"}), 404
+
+    space_data = {
+        "id": space.id,
+        "name": space.name,
+        "type": space.type,
+        "category": space.category,
+        "address": space.address,
+        "description": space.description,
+        "contactEmail": space.contactEmail,
+        "website": space.website,
+        "phone": space.phone,
+        "latitude": getattr(space, 'latitude', None),
+        "longitude": getattr(space, 'longitude', None),
+        "indoor": space.indoor,
+        "outdoor": space.outdoor,
+        "wifi": space.wifi,
+        "parking": space.parking,
+        "created_by": space.created_by,
+    }
+
+    return jsonify(space_data), 200
+
 @app.route('/spaces/categories', methods=['GET'])
 def get_categories():
-    categories = db.session.query(Space.type).distinct().all()
-    category_list = [c[0] for c in categories]
-    return jsonify(categories=category_list)
+    spaces = Space.query.all()
+
+    category_counts = {}
+    for space in spaces:
+        category = space.category
+        if category in category_counts:
+            category_counts[category] += 1
+        else:
+            category_counts[category] = 1
+
+    categories = [
+        {
+            "id": category.lower().replace(" ", "_"),
+            "name": category,
+            "description": f"Spaces under {category}",
+            "icon": "🏠",
+            "count": count
+        }
+        for category, count in category_counts.items()
+    ]
+
+    return jsonify({"categories": categories})
+
 
 @app.route('/spaces/categories/<string:category>/spaces', methods=['GET'])
 def get_spaces_in_category(category):
@@ -230,6 +330,115 @@ def get_spaces_in_category(category):
         'description': s.description
     } for s in spaces]
     return jsonify(spaces=spaces_list)
+
+@app.route('/accessibility/add', methods=['POST'])
+def add_accessibility_feature():
+    data = request.get_json()
+
+    # Handle a single object or a list of objects
+    if isinstance(data, dict):
+        data = [data]
+
+    created_features = []
+
+    for item in data:
+        required_fields = ['name', 'description', 'icon']
+        if not all(field in item for field in required_fields):
+            return jsonify({'message': 'Missing required fields in one or more entries'}), 400
+
+        feature = AccessibilityFeature(
+            name=item['name'],
+            description=item['description'],
+            icon=item['icon']
+        )
+        db.session.add(feature)
+        created_features.append(feature)
+
+    db.session.commit()
+
+    return jsonify({
+        'message': f'{len(created_features)} feature(s) added',
+        'features': [
+            {
+                'id': feature.id,
+                'name': feature.name,
+                'description': feature.description,
+                'icon': feature.icon
+            }
+            for feature in created_features
+        ]
+    }), 201
+
+
+@app.route('/accessibility', methods=['GET'])
+def get_accessibility_features():
+    features = AccessibilityFeature.query.all()
+
+    feature_list = []
+    for feature in features:
+        feature_list.append({
+            'id': feature.id,
+            'name': feature.name,
+            'description': feature.description,
+            'icon': feature.icon
+        })
+
+    return jsonify({'features': feature_list}), 200
+
+@app.route('/reviews/add', methods=['POST'])
+def add_reviews():
+    data = request.get_json()
+
+    # Ensure input is a list for batch support
+    if not isinstance(data, list):
+        data = [data]
+
+    reviews_to_add = []
+    errors = []
+
+    for idx, entry in enumerate(data):
+        required_fields = ['space_id', 'user_id', 'rating']
+        missing = [field for field in required_fields if field not in entry]
+
+        if missing:
+            errors.append({
+                "index": idx,
+                "error": f"Missing required fields: {', '.join(missing)}"
+            })
+            continue
+
+        # Validate user and space
+        user = User.query.get(entry['user_id'])
+        space = Space.query.get(entry['space_id'])
+
+        if not user or not space:
+            errors.append({
+                "index": idx,
+                "error": f"{'User' if not user else 'Space'} not found"
+            })
+            continue
+
+        # Optional fields
+        rating = entry['rating']
+        comment = entry.get('comment', '')
+
+        review = Review(
+            space_id=entry['space_id'],
+            user_id=entry['user_id'],
+            rating=rating,
+            comment=comment,
+            created_at=datetime.utcnow()
+        )
+        reviews_to_add.append(review)
+
+    if reviews_to_add:
+        db.session.add_all(reviews_to_add)
+        db.session.commit()
+
+    return jsonify({
+        "message": f"{len(reviews_to_add)} review(s) added successfully.",
+        "errors": errors
+    }), 207 if errors else 201
 
 def output_error(code, message):
     response = jsonify({'status': code, 'message': message})
