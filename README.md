@@ -1,5 +1,6 @@
 # huddlehive_muses
 HuddleHive's WIT Hackathon #3
+App Name: Hidden Spaces
 
 Aim: Discover the spaces between places.
 
