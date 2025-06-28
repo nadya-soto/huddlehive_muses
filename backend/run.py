@@ -175,12 +175,13 @@ def add_spaces():
     errors = []
 
     for idx, item in enumerate(data):
-        # Check user exists
+        # Check if user exists
         user = User.query.get(item.get('created_by'))
         if not user:
             errors.append({'index': idx, 'error': 'User not found', 'data': item})
             continue
 
+        # Validate required fields
         required_fields = ['name', 'type', 'category', 'address', 'description', 'contactEmail']
         missing_fields = [field for field in required_fields if field not in item]
 
@@ -192,6 +193,15 @@ def add_spaces():
             })
             continue
 
+        # Get feature objects from IDs
+        feature_ids = item.get('features', [])
+        matched_features = []
+        if feature_ids:
+            matched_features = AccessibilityFeature.query.filter(
+                AccessibilityFeature.id.in_(feature_ids)
+            ).all()
+
+        # Create the Space object
         space = Space(
             name=item['name'],
             type=item['type'],
@@ -205,7 +215,10 @@ def add_spaces():
             outdoor=item.get('outdoor', False),
             wifi=item.get('wifi', False),
             parking=item.get('parking', False),
-            created_by=user.id
+            latitude=item.get('latitude'),
+            longitude=item.get('longitude'),
+            created_by=user.id,
+            features=matched_features  # attach features correctly
         )
 
         db.session.add(space)
@@ -218,8 +231,9 @@ def add_spaces():
         'errors': errors
     }
 
-    status_code = 207 if errors else 201  # 207: Multi-Status
+    status_code = 207 if errors else 201  # 207: Multi-Status for partial success
     return jsonify(response), status_code
+
 
 
 @app.route('/spaces/remove/<int:space_id>', methods=['DELETE'])
@@ -265,32 +279,6 @@ def edit_space(space_id):
         'type': space.type,
         'address': space.address
     }})
-
-@app.route('/spaces/<int:space_id>', methods=['GET'])
-def get_space(space_id):
-    space = Space.query.get(space_id)
-
-    if not space:
-        return jsonify({"error": "Space not found"}), 404
-
-    space_data = {
-        "id": space.id,
-        "name": space.name,
-        "type": space.type,
-        "category": space.category,
-        "address": space.address,
-        "description": space.description,
-        "contactEmail": space.contactEmail,
-        "website": space.website,
-        "phone": space.phone,
-        "latitude": getattr(space, 'latitude', None),
-        "longitude": getattr(space, 'longitude', None),
-        "indoor": space.indoor,
-        "outdoor": space.outdoor,
-        "wifi": space.wifi,
-        "parking": space.parking,
-        "created_by": space.created_by,
-    }
 
     return jsonify(space_data), 200
 
@@ -454,35 +442,38 @@ def error_handler(error):
     response.status_code = 404
     return response
 
-
-
-#number 8 implementation 
 @app.route('/spaces/<int:space_id>', methods=['GET'])
 def get_space_details(space_id):
     space = Space.query.get(space_id)
     if not space:
         return output_error(404, "Space not found")
 
+    def average_rating(reviews):
+        if not reviews:
+            return None
+        return round(sum(r.rating for r in reviews if r.rating is not None) / len(reviews), 1)
+
     return jsonify({
         "space": {
             "id": space.id,
             "name": space.name,
             "type": space.type,
+            "category": space.category,
             "address": space.address,
             "description": space.description,
             "website": space.website,
             "phone": space.phone,
             "rating": average_rating(space.reviews),
             "reviewCount": len(space.reviews),
-            "distance": "",  
-            "images": [],  
-            "features": [f.name for f in space.features],
+            "distance": "",  # Placeholder for client-side or GPS-based logic
+            "images": [],    # Placeholder if image logic is not yet implemented
+            "features": [f.name for f in space.features],  # Correct usage
             "indoor": space.indoor,
             "outdoor": space.outdoor,
             "wifi": space.wifi,
             "parking": space.parking,
             "coordinates": [space.latitude, space.longitude] if space.latitude and space.longitude else [],
-            "hours": {},  
+            "hours": {},  # Placeholder for future use
             "ownerId": space.created_by,
             "createdBy": space.creator.name if space.creator else None
         }
