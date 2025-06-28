@@ -1,7 +1,14 @@
-from flask import Flask, jsonify, request
+from flask import Flask, request, jsonify
+from flask_sqlalchemy import SQLAlchemy
+import os
 
-# Configuration
 app = Flask(__name__)
+
+# SQLite DB (stored in a file named dev.db)
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///dev.db'
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
+db = SQLAlchemy(app)
 
 @app.route("/")
 def home():
