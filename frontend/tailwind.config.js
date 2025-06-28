@@ -2,11 +2,8 @@
 export default {
   darkMode: ["class"],
   content: [
-    "./pages/**/*.{ts,tsx}",
-    "./components/**/*.{ts,tsx}",
-    "./app/**/*.{ts,tsx}",
-    "./src/**/*.{ts,tsx}",
-    "*.{js,ts,jsx,tsx,mdx}",
+    "./src/**/*.{js,ts,jsx,tsx,mdx}", // covers all source files
+    "./index.html", // if you're using Vite
   ],
   prefix: "",
   theme: {
@@ -75,4 +72,4 @@ export default {
     },
   },
   plugins: [require("tailwindcss-animate")],
-}
+};
