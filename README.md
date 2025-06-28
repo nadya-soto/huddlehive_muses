@@ -1,4 +1,5 @@
 # huddlehive_muses
+
 HuddleHive's WIT Hackathon #3
 App Name: Hidden Spaces
 
@@ -19,9 +20,5 @@ Team members
 
 - Miriam Duke
 - Jocelyn Soto
+- Eleni Salamouri
 -
--
-
-
-
-
