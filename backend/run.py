@@ -246,8 +246,8 @@ def remove_space(space_id):
     space = Space.query.get(space_id)
     if not space:
         return output_error(404, "Space not found")
-    if space.created_by != user_id:
-        return output_error(403, "Only owner can delete this space")
+    #if space.created_by != user_id:
+       # return output_error(403, "Only owner can delete this space")
 
     db.session.delete(space)
     db.session.commit()
@@ -263,24 +263,56 @@ def edit_space(space_id):
     space = Space.query.get(space_id)
     if not space:
         return output_error(404, "Space not found")
-    if space.created_by != user_id:
-        return output_error(403, "Only owner can edit this space")
 
-    # Update allowed fields
-    fields = ['name', 'type', 'address', 'description', 'website', 'phone', 'latitude', 'longitude', 'indoor', 'outdoor', 'wifi', 'parking']
+    # Editable fields
+    fields = [
+        'name', 'type', 'category', 'address', 'description', 'website', 'phone',
+        'latitude', 'longitude', 'indoor', 'outdoor', 'wifi', 'parking'
+    ]
     for field in fields:
         if field in data:
             setattr(space, field, data[field])
 
-    db.session.commit()
-    return jsonify({"message": "Space updated", "space": {
-        'id': space.id,
-        'name': space.name,
-        'type': space.type,
-        'address': space.address
-    }})
+    
+    if 'features' in data:
+        feature_ids = data['features']
+        if isinstance(feature_ids, list):
+            features =  AccessibilityFeature.query.filter(
+                AccessibilityFeature.id.in_(feature_ids)
+            ).all()
+            space.features = features
+        else:
+            return output_error(400, "Features should be a list of IDs")
 
-    return jsonify(space_data), 200
+    db.session.commit()
+
+    # Serialize updated space data
+    space_data = {
+        "id": space.id,
+        "name": space.name,
+        "type": space.type,
+        "category": space.category,
+        "address": space.address,
+        "description": space.description,
+        "website": space.website,
+        "phone": space.phone,
+        "rating": None,  # You can compute if you want here
+        "reviewCount": len(space.reviews),
+        "distance": "",
+        "images": [],
+        "features": [f.name for f in space.features],
+        "indoor": space.indoor,
+        "outdoor": space.outdoor,
+        "wifi": space.wifi,
+        "parking": space.parking,
+        "coordinates": [space.latitude, space.longitude] if space.latitude and space.longitude else [],
+        "hours": {},
+        "ownerId": space.created_by,
+        "createdBy": space.creator.name if space.creator else None,
+    }
+
+    return jsonify({"message": "Space updated", "space": space_data}), 200
+
 
 @app.route('/spaces/categories', methods=['GET'])
 def get_categories():
