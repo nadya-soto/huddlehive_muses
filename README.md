@@ -18,7 +18,7 @@ We're here to bridge the gap between people searching for connection and the und
 Team members
 
 - Miriam Duke
--
+- Jocelyn Soto
 -
 -
 
