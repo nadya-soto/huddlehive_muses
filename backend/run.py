@@ -451,7 +451,23 @@ def get_space_details(space_id):
     def average_rating(reviews):
         if not reviews:
             return None
-        return round(sum(r.rating for r in reviews if r.rating is not None) / len(reviews), 1)
+        # Only consider reviews with a rating
+        valid_ratings = [r.rating for r in reviews if r.rating is not None]
+        if not valid_ratings:
+            return None
+        return round(sum(valid_ratings) / len(valid_ratings), 1)
+
+    # Serialize reviews
+    reviews_data = [
+        {
+            "id": review.id,
+            "user_id": review.user_id,
+            "rating": review.rating,
+            "comment": review.comment,
+            "created_at": review.created_at.isoformat() if review.created_at else None
+        }
+        for review in space.reviews
+    ]
 
     return jsonify({
         "space": {
@@ -465,24 +481,20 @@ def get_space_details(space_id):
             "phone": space.phone,
             "rating": average_rating(space.reviews),
             "reviewCount": len(space.reviews),
-            "distance": "",  # Placeholder for client-side or GPS-based logic
-            "images": [],    # Placeholder if image logic is not yet implemented
-            "features": [f.name for f in space.features],  # Correct usage
+            "distance": "",  # Placeholder
+            "images": [],    # Placeholder
+            "features": [f.name for f in space.features],
             "indoor": space.indoor,
             "outdoor": space.outdoor,
             "wifi": space.wifi,
             "parking": space.parking,
             "coordinates": [space.latitude, space.longitude] if space.latitude and space.longitude else [],
-            "hours": {},  # Placeholder for future use
+            "hours": {},  # Placeholder
             "ownerId": space.created_by,
-            "createdBy": space.creator.name if space.creator else None
+            "createdBy": space.creator.name if space.creator else None,
+            "reviews": reviews_data  # Add the reviews here
         }
     })
-
-def average_rating(reviews):
-    if not reviews:
-        return 0
-    return round(sum([r.rating for r in reviews]) / len(reviews), 2)
 
 
 if __name__ == "__main__":
