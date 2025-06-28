@@ -528,46 +528,6 @@ def get_space_details(space_id):
         }
     })
 
-@app.route('/spaces', methods=['GET'])
-def get_spaces():
-    # Parámetros de filtro
-    search = request.args.get('search', '')
-    space_types = request.args.getlist('types')
-    feature_ids = request.args.getlist('features')
-    
-    query = Space.query
-    
-    # Filtros
-    if search:
-        query = query.filter(Space.name.contains(search) | 
-                           Space.address.contains(search))
-    
-    if space_types:
-        query = query.filter(Space.type.in_(space_types))
-    
-    if feature_ids:
-        query = query.join(Space.features).filter(
-            AccessibilityFeature.id.in_(feature_ids))
-    
-    spaces = query.all()
-    
-    # Serializar respuesta
-    spaces_data = []
-    for space in spaces:
-        spaces_data.append({
-            "id": space.id,
-            "name": space.name,
-            "type": space.type,
-            "address": space.address,
-            "rating": average_rating(space.reviews),
-            "distance": "0.0 miles",  # Calcular con coordenadas
-            "image": "/placeholder.svg?height=200&width=300",
-            "features": [f.name.lower().replace(' ', '_') for f in space.features],
-            "description": space.description,
-            "coordinates": [space.latitude, space.longitude]
-        })
-    
-    return jsonify({"spaces": spaces_data})
 
 if __name__ == "__main__":
     with app.app_context():
