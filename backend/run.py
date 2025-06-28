@@ -1,75 +1,218 @@
 import json
+from datetime import datetime
 from flask import Flask, jsonify, request
 from flask_sqlalchemy import SQLAlchemy
 
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///dev.db'  # SQLite file in your project folder
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///dev.db'  # SQLite file
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db = SQLAlchemy(app)
 
-# Define your User model
+# Users table
 class User(db.Model):
+    __tablename__ = 'users'
     id = db.Column(db.Integer, primary_key=True)
-    title = db.Column(db.String(10))
-    first_name = db.Column(db.String(80), nullable=False)
-    last_name = db.Column(db.String(80), nullable=False)
-    postcode = db.Column(db.String(20))
-    phone_num = db.Column(db.String(20))
-    gender = db.Column(db.String(10))
+    email = db.Column(db.String(255), unique=True, nullable=False)
+    name = db.Column(db.String(255), nullable=False)
+    ethnicity = db.Column(db.String(255), nullable=False)
+    language = db.Column(db.String(255), nullable=False)
+    hobby = db.Column(db.String(255), nullable=False)
+    gender = db.Column(db.String(255), nullable=False)
+    age = db.Column(db.String(255), nullable=False)
+    city = db.Column(db.String(255), nullable=False)
+    sexual_orientation = db.Column(db.String(255), nullable=False)
+    password_hash = db.Column(db.String(255), nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    spaces_created = db.relationship('Space', backref='creator', lazy=True)
+    reviews = db.relationship('Review', backref='user', lazy=True)
 
-    def to_dict(self):
-        return {
-            'title': self.title,
-            'first_name': self.first_name,
-            'last_name': self.last_name,
-            'postcode': self.postcode,
-            'phone_num': self.phone_num,
-            'gender': self.gender
-        }
+# Spaces table
+class Space(db.Model):
+    __tablename__ = 'spaces'
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(255), nullable=False)
+    type = db.Column(db.String(100), nullable=False)
+    address = db.Column(db.Text, nullable=False)
+    description = db.Column(db.Text)
+    website = db.Column(db.String(255))
+    phone = db.Column(db.String(50))
+    latitude = db.Column(db.Float(precision=8))
+    longitude = db.Column(db.Float(precision=8))
+    indoor = db.Column(db.Boolean, default=True)
+    outdoor = db.Column(db.Boolean, default=False)
+    wifi = db.Column(db.Boolean, default=False)
+    parking = db.Column(db.Boolean, default=False)
+    created_by = db.Column(db.Integer, db.ForeignKey('users.id'))
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    features = db.relationship('AccessibilityFeature', secondary='space_features', back_populates='spaces')
+    reviews = db.relationship('Review', backref='space', lazy=True)
+
+# Accessibility Features table
+class AccessibilityFeature(db.Model):
+    __tablename__ = 'accessibility_features'
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100), nullable=False)
+    description = db.Column(db.Text)
+    icon = db.Column(db.String(10))
+
+    spaces = db.relationship('Space', secondary='space_features', back_populates='features')
+
+# Junction table for many-to-many Space <-> AccessibilityFeature
+space_features = db.Table('space_features',
+    db.Column('space_id', db.Integer, db.ForeignKey('spaces.id', ondelete='CASCADE'), primary_key=True),
+    db.Column('feature_id', db.Integer, db.ForeignKey('accessibility_features.id', ondelete='CASCADE'), primary_key=True)
+)
+
+# Reviews table
+class Review(db.Model):
+    __tablename__ = 'reviews'
+    id = db.Column(db.Integer, primary_key=True)
+    space_id = db.Column(db.Integer, db.ForeignKey('spaces.id', ondelete='CASCADE'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='CASCADE'), nullable=False)
+    rating = db.Column(db.Integer)
+    comment = db.Column(db.Text)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
 
 @app.route("/")
 def home():
     return jsonify(message="Welcome to the Hidden Spaces API")
 
-@app.route('/user', methods=['POST'])
-def register_user():
-    request_data = request.get_json()
 
-    required_fields = ('title', 'postcode', 'phone_num', 'first_name', 'last_name', 'gender')
-    if not all(key in request_data for key in required_fields):
-        return output_error(400, 'Provide essential fields when creating a NEW user')
 
-    # Check if user already exists
-    existing_user = User.query.filter_by(
-        first_name=request_data['first_name'],
-        last_name=request_data['last_name']
-    ).first()
+@app.route('/register', methods=['POST'])
+def register():
+    data = request.get_json()
+    required_fields = ['email', 'name', 'ethnicity', 'age', 'city', 'sexual_orientation', 'password']
+    if not all(field in data for field in required_fields):
+        return output_error(400, "Missing required fields")
 
-    if existing_user:
-        return output_error(400, 'User is already registered')
+    if User.query.filter_by(email=data['email']).first():
+        return output_error(400, "Email already registered")
 
-    new_user = User(
-        title=request_data['title'],
-        first_name=request_data['first_name'],
-        last_name=request_data['last_name'],
-        postcode=request_data['postcode'],
-        phone_num=request_data['phone_num'],
-        gender=request_data['gender']
+    user = User(
+        email=data['email'],
+        name=data['name'],
+        ethnicity=data['ethnicity'],
+        age=data['age'],
+        city=data['city'],
+        sexual_orientation=data['sexual_orientation'],
+        password_hash=(data['password'])
     )
-    db.session.add(new_user)
+    db.session.add(user)
+    db.session.commit()
+    return jsonify({"message": "User registered successfully", "user_id": user.id}), 201
+
+
+@app.route('/login', methods=['POST'])
+def login():
+    data = request.get_json()
+    if not data or not data.get('email') or not data.get('password'):
+        return output_error(400, "Email and password required")
+
+    user = User.query.filter_by(email=data['email']).first()
+    if user and user.password_hash ==  data['password']:
+        # For simplicity, just respond success (token/session can be added later)
+        return jsonify({"message": "Login successful", "user_id": user.id})
+    return output_error(401, "Invalid email or password")
+
+
+@app.route('/spaces/add', methods=['POST'])
+def add_space():
+    data = request.get_json()
+    required_fields = ['name', 'type', 'address', 'created_by']
+    if not all(field in data for field in required_fields):
+        return output_error(400, "Missing required fields")
+
+    # Check user exists
+    user = User.query.get(data['created_by'])
+    if not user:
+        return output_error(404, "User not found")
+
+    space = Space(
+        name=data['name'],
+        type=data['type'],
+        address=data['address'],
+        description=data.get('description'),
+        website=data.get('website'),
+        phone=data.get('phone'),
+        latitude=data.get('latitude'),
+        longitude=data.get('longitude'),
+        indoor=data.get('indoor', True),
+        outdoor=data.get('outdoor', False),
+        wifi=data.get('wifi', False),
+        parking=data.get('parking', False),
+        created_by=user.id
+    )
+    db.session.add(space)
     db.session.commit()
 
-    response = jsonify(new_user.to_dict())
-    response.status_code = 201
-    return response
+    return jsonify({"message": "Space added", "space_id": space.id}), 201
 
-@app.route('/user/<string:first_name>/<string:last_name>', methods=['GET'])
-def get_user_info(first_name, last_name):
-    user = User.query.filter_by(first_name=first_name, last_name=last_name).first()
-    if user:
-        return jsonify(user.to_dict())
-    return output_error(404, 'User does NOT EXIST')
+@app.route('/spaces/remove/<int:space_id>', methods=['DELETE'])
+def remove_space(space_id):
+    data = request.get_json()
+    user_id = data.get('user_id') if data else None
+    if not user_id:
+        return output_error(400, "User ID required")
+
+    space = Space.query.get(space_id)
+    if not space:
+        return output_error(404, "Space not found")
+    if space.created_by != user_id:
+        return output_error(403, "Only owner can delete this space")
+
+    db.session.delete(space)
+    db.session.commit()
+    return jsonify({"message": f"Space {space_id} deleted"})
+
+@app.route('/spaces/edit/<int:space_id>', methods=['PUT'])
+def edit_space(space_id):
+    data = request.get_json()
+    user_id = data.get('user_id')
+    if not user_id:
+        return output_error(400, "User ID required")
+
+    space = Space.query.get(space_id)
+    if not space:
+        return output_error(404, "Space not found")
+    if space.created_by != user_id:
+        return output_error(403, "Only owner can edit this space")
+
+    # Update allowed fields
+    fields = ['name', 'type', 'address', 'description', 'website', 'phone', 'latitude', 'longitude', 'indoor', 'outdoor', 'wifi', 'parking']
+    for field in fields:
+        if field in data:
+            setattr(space, field, data[field])
+
+    db.session.commit()
+    return jsonify({"message": "Space updated", "space": {
+        'id': space.id,
+        'name': space.name,
+        'type': space.type,
+        'address': space.address
+    }})
+
+@app.route('/spaces/categories', methods=['GET'])
+def get_categories():
+    categories = db.session.query(Space.type).distinct().all()
+    category_list = [c[0] for c in categories]
+    return jsonify(categories=category_list)
+
+@app.route('/spaces/categories/<string:category>/spaces', methods=['GET'])
+def get_spaces_in_category(category):
+    spaces = Space.query.filter_by(type=category).all()
+    spaces_list = [{
+        'id': s.id,
+        'name': s.name,
+        'address': s.address,
+        'description': s.description
+    } for s in spaces]
+    return jsonify(spaces=spaces_list)
 
 def output_error(code, message):
     response = jsonify({'status': code, 'message': message})
