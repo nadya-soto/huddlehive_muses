@@ -95,14 +95,17 @@ def register():
         return output_error(400, "Email already registered")
 
     user = User(
-        email=data['email'],
-        name=data['name'],
-        ethnicity=data['ethnicity'],
-        age=data['age'],
-        city=data['city'],
-        sexual_orientation=data['sexual_orientation'],
-        password_hash=(data['password'])
-    )
+    email=data['email'],
+    name=data['name'],
+    ethnicity=data['ethnicity'],
+    language=data['language'],
+    hobby=data['hobby'],
+    gender=data['gender'],
+    age=data['age'],
+    city=data['city'],
+    sexual_orientation=data['sexual_orientation'],
+    password_hash=(data['password'])  )
+
     db.session.add(user)
     db.session.commit()
     return jsonify({"message": "User registered successfully", "user_id": user.id}), 201
