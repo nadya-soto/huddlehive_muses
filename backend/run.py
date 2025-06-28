@@ -28,10 +28,6 @@ class User(db.Model):
             'gender': self.gender
         }
 
-@app.before_first_request
-def create_tables():
-    db.create_all()
-
 @app.route("/")
 def home():
     return jsonify(message="Welcome to the Hidden Spaces API")
@@ -90,4 +86,6 @@ def error_handler(error):
     return response
 
 if __name__ == "__main__":
+    with app.app_context():
+        db.create_all()
     app.run(debug=True)
