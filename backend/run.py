@@ -245,6 +245,44 @@ def error_handler(error):
     response.status_code = 404
     return response
 
+#number 8 implementation 
+@app.route('/spaces/<int:space_id>', methods=['GET'])
+def get_space_details(space_id):
+    space = Space.query.get(space_id)
+    if not space:
+        return output_error(404, "Space not found")
+
+    return jsonify({
+        "space": {
+            "id": space.id,
+            "name": space.name,
+            "type": space.type,
+            "category": space.category,
+            "address": space.address,
+            "contactEmail": space.contactEmail,
+            "description": space.description,
+            "website": space.website,
+            "phone": space.phone,
+            "rating": average_rating(space.reviews),
+            "reviewCount": len(space.reviews),
+            "features": [f.name for f in space.features],
+            "indoor": space.indoor,
+            "outdoor": space.outdoor,
+            "wifi": space.wifi,
+            "parking": space.parking,
+            "coordinates": [space.latitude, space.longitude] if space.latitude and space.longitude else [],
+            "hours": {},  
+            "ownerId": space.created_by,
+            "createdBy": space.creator.name if space.creator else None
+        }
+    })
+
+def average_rating(reviews):
+    if not reviews:
+        return 0
+    return round(sum([r.rating for r in reviews]) / len(reviews), 2)
+
+
 if __name__ == "__main__":
     with app.app_context():
         db.create_all()
