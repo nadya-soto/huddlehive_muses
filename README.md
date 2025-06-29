@@ -18,7 +18,11 @@ We're here to bridge the gap between people searching for connection and the und
 
 Team members
 
-- Miriam Duke
-- Jocelyn Soto
-- Eleni Salamouri
--
+-- Sofia Bargues
+-- Eleni Salamouri
+-- Nadya Jocelyn Soto Aguilar
+-- Miriam Duke
+-- Anastasiia Sokolova
+
+Presentation
+https://www.canva.com/design/DAGrq4mGlz0/CEn39KUIkUu3sZr7r1j6Ug/view?utm_content=DAGrq4mGlz0&utm_campaign=designshare&utm_medium=link2&utm_source=uniquelinks&utlId=h9c723cded3
