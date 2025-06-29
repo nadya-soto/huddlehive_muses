@@ -7,7 +7,17 @@ import datetime
 from werkzeug.security import generate_password_hash, check_password_hash
 
 app = Flask(__name__)
-CORS(app)
+CORS(app, origins=["http://localhost:3000"], supports_credentials=True, methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"], allow_headers=["Content-Type", "Authorization"])
+
+@app.before_request
+def handle_preflight():
+    if request.method == "OPTIONS":
+        response = jsonify()
+        response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")
+        response.headers.add('Access-Control-Allow-Headers', "Content-Type,Authorization")
+        response.headers.add('Access-Control-Allow-Methods', "GET,PUT,POST,DELETE,OPTIONS")
+        return response
+        
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///accessibility_map.db'
 app.config['SECRET_KEY'] = 'your_secret_key'
 db = SQLAlchemy(app)
@@ -37,6 +47,7 @@ class Space(db.Model):
     description = db.Column(db.Text, nullable=False)
     contactEmail = db.Column(db.String(120), nullable=False)
     website = db.Column(db.String(120))
+    image = db.Column(db.String(500), nullable=True)
     phone = db.Column(db.String(20))
     indoor = db.Column(db.Boolean, default=True)
     outdoor = db.Column(db.Boolean, default=False)
@@ -101,6 +112,8 @@ def get_all_spaces():
             "wifi": s.wifi,
             "parking": s.parking,
             "coordinates": [s.latitude, s.longitude] if s.latitude and s.longitude else [],
+            "image": s.image, 
+            "features": [f.name for f in s.features] if s.features else [] 
         })
     return jsonify({"spaces": result})
 
@@ -111,9 +124,13 @@ def create_space():
     if not all(field in data for field in required_fields):
         return output_error(400, f"Missing required fields: {', '.join(field for field in required_fields if field not in data)}")
 
-    user = User.query.get(data.get('created_by'))
+    # Create or get a default user for development
+    user = User.query.first()
     if not user:
-        return output_error(404, "Creator not found")
+        # Create a default user with all required fields
+        user = User(username="dev_user", email="dev@example.com", password="dev_password")
+        db.session.add(user)
+        db.session.commit()
 
     feature_ids = data.get('features', [])
     matched_features = AccessibilityFeature.query.filter(AccessibilityFeature.id.in_(feature_ids)).all() if feature_ids else []
@@ -126,6 +143,7 @@ def create_space():
         description=data['description'],
         contactEmail=data['contactEmail'],
         website=data.get('website'),
+        image=data.get('image'),
         phone=data.get('phone'),
         indoor=data.get('indoor', True),
         outdoor=data.get('outdoor', False),
@@ -184,5 +202,34 @@ def delete_space(id):
     db.session.commit()
     return jsonify({"message": "Space deleted"})
 
+@app.route('/api/debug/tables')
+def check_tables():
+    from sqlalchemy import inspect
+    inspector = inspect(db.engine)
+    tables = inspector.get_table_names()
+    return jsonify({"tables": tables})
+
 if __name__ == '__main__':
-    app.run(debug=True)
+    with app.app_context():
+        # Drop all tables and recreate them (will lose existing data)
+        db.drop_all()
+        db.create_all()
+        
+        # Optional: Add some default accessibility features
+        if not AccessibilityFeature.query.first():
+            features = [
+                AccessibilityFeature(name="Wheelchair Accessible"),
+                AccessibilityFeature(name="Hearing Loop"),
+                AccessibilityFeature(name="Braille Signage"),
+                AccessibilityFeature(name="Accessible Parking"),
+                AccessibilityFeature(name="Accessible Restrooms"),
+                AccessibilityFeature(name="Visual Aids"),
+                AccessibilityFeature(name="Elevator Access"),
+                AccessibilityFeature(name="Ramp Access")
+            ]
+            for feature in features:
+                db.session.add(feature)
+            db.session.commit()
+            print("Database tables created and default features added!")
+    
+    app.run(debug=True, host='0.0.0.0', port=5000)

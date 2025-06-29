@@ -1,18 +1,30 @@
-"use client"
+"use client";
 
-import type React from "react"
-import { useState } from "react"
-import { useNavigate, Link } from "react-router-dom"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
-import { Checkbox } from "@/components/ui/checkbox"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
-import { Users, MapPin, Plus, Building, Home } from "lucide-react"
-import { spacesAPI } from "@/lib/api"
+import type React from "react";
+import { useState } from "react";
+import { useNavigate, Link } from "react-router-dom";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Users, MapPin, Plus, Building, Home } from "lucide-react";
+import { spacesAPI } from "@/lib/api";
 
 const accessibilityFeatures = [
   { id: "accessible_restrooms", label: "Accessible Restrooms" },
@@ -24,7 +36,7 @@ const accessibilityFeatures = [
   { id: "calm_spaces", label: "Calm Spaces" },
   { id: "trained_staff", label: "Trained Staff" },
   { id: "culturally_inclusive", label: "Culturally Inclusive" },
-]
+];
 
 const spaceCategories = [
   "Café",
@@ -36,10 +48,10 @@ const spaceCategories = [
   "Gallery",
   "Museum",
   "Other",
-]
+];
 
 export default function AddSpacePage() {
-  const navigate = useNavigate()
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     name: "",
     category: "", // café/library/park
@@ -54,28 +66,29 @@ export default function AddSpacePage() {
     outdoor: false,
     wifi: false,
     parking: false,
-  })
-  const [isLoading, setIsLoading] = useState(false)
-  const [error, setError] = useState("")
+    image: "",
+  });
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState("");
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setIsLoading(true)
-    setError("")
+    e.preventDefault();
+    setIsLoading(true);
+    setError("");
 
     try {
-      await spacesAPI.createSpace(formData)
-      navigate("/discover")
+      await spacesAPI.createSpace(formData);
+      navigate("/discover");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to add space")
+      setError(err instanceof Error ? err.message : "Failed to add space");
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   const updateFormData = (field: string, value: any) => {
-    setFormData((prev) => ({ ...prev, [field]: value }))
-  }
+    setFormData((prev) => ({ ...prev, [field]: value }));
+  };
 
   const toggleFeature = (featureId: string) => {
     setFormData((prev) => ({
@@ -83,8 +96,8 @@ export default function AddSpacePage() {
       features: prev.features.includes(featureId)
         ? prev.features.filter((f) => f !== featureId)
         : [...prev.features, featureId],
-    }))
-  }
+    }));
+  };
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -111,8 +124,12 @@ export default function AddSpacePage() {
 
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Add a New Space</h1>
-          <p className="text-gray-600">Help grow our community by adding a hidden space</p>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">
+            Add a New Space
+          </h1>
+          <p className="text-gray-600">
+            Help grow our community by adding a hidden space
+          </p>
         </div>
 
         <Card>
@@ -121,7 +138,9 @@ export default function AddSpacePage() {
               <Plus className="w-5 h-5" />
               Space Information
             </CardTitle>
-            <CardDescription>Provide details about the space you'd like to add to our community</CardDescription>
+            <CardDescription>
+              Provide details about the space you'd like to add to our community
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-6">
@@ -141,21 +160,31 @@ export default function AddSpacePage() {
                 >
                   <div className="flex items-center space-x-2 border rounded-lg p-4 hover:bg-gray-50">
                     <RadioGroupItem value="commercial" id="commercial" />
-                    <Label htmlFor="commercial" className="flex items-center gap-2 cursor-pointer">
+                    <Label
+                      htmlFor="commercial"
+                      className="flex items-center gap-2 cursor-pointer"
+                    >
                       <Building className="w-5 h-5 text-blue-600" />
                       <div>
                         <div className="font-medium">Commercial Space</div>
-                        <div className="text-sm text-gray-600">Public businesses, cafes, libraries, etc.</div>
+                        <div className="text-sm text-gray-600">
+                          Public businesses, cafes, libraries, etc.
+                        </div>
                       </div>
                     </Label>
                   </div>
                   <div className="flex items-center space-x-2 border rounded-lg p-4 hover:bg-gray-50">
                     <RadioGroupItem value="private" id="private" />
-                    <Label htmlFor="private" className="flex items-center gap-2 cursor-pointer">
+                    <Label
+                      htmlFor="private"
+                      className="flex items-center gap-2 cursor-pointer"
+                    >
                       <Home className="w-5 h-5 text-green-600" />
                       <div>
                         <div className="font-medium">Private Space</div>
-                        <div className="text-sm text-gray-600">Personal spaces available for community use</div>
+                        <div className="text-sm text-gray-600">
+                          Personal spaces available for community use
+                        </div>
                       </div>
                     </Label>
                   </div>
@@ -176,13 +205,19 @@ export default function AddSpacePage() {
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="category">Space Category *</Label>
-                  <Select value={formData.category} onValueChange={(value) => updateFormData("category", value)}>
+                  <Select
+                    value={formData.category}
+                    onValueChange={(value) => updateFormData("category", value)}
+                  >
                     <SelectTrigger>
                       <SelectValue placeholder="Select space category" />
                     </SelectTrigger>
                     <SelectContent>
                       {spaceCategories.map((category) => (
-                        <SelectItem key={category} value={category.toLowerCase()}>
+                        <SelectItem
+                          key={category}
+                          value={category.toLowerCase()}
+                        >
                           {category}
                         </SelectItem>
                       ))}
@@ -212,9 +247,23 @@ export default function AddSpacePage() {
                   id="description"
                   placeholder="Describe the space, its atmosphere, and what makes it special..."
                   value={formData.description}
-                  onChange={(e) => updateFormData("description", e.target.value)}
+                  onChange={(e) =>
+                    updateFormData("description", e.target.value)
+                  }
                   rows={4}
                   required
+                />
+              </div>
+
+              {/* Image upload */}
+              <div className="space-y-2">
+                <Label htmlFor="image">Image URL</Label>
+                <Input
+                  id="image"
+                  type="url"
+                  placeholder="https://example.com/image.jpg"
+                  value={formData.image}
+                  onChange={(e) => updateFormData("image", e.target.value)}
                 />
               </div>
 
@@ -227,11 +276,14 @@ export default function AddSpacePage() {
                     type="email"
                     placeholder="contact@example.com"
                     value={formData.contactEmail}
-                    onChange={(e) => updateFormData("contactEmail", e.target.value)}
+                    onChange={(e) =>
+                      updateFormData("contactEmail", e.target.value)
+                    }
                     required
                   />
                   <p className="text-sm text-gray-600">
-                    This email will be used for people to contact you about using the space
+                    This email will be used for people to contact you about
+                    using the space
                   </p>
                 </div>
                 <div className="space-y-2">
@@ -268,7 +320,9 @@ export default function AddSpacePage() {
                       <Checkbox
                         id="indoor"
                         checked={formData.indoor}
-                        onCheckedChange={(checked) => updateFormData("indoor", checked)}
+                        onCheckedChange={(checked) =>
+                          updateFormData("indoor", checked)
+                        }
                       />
                       <Label htmlFor="indoor">Indoor Space</Label>
                     </div>
@@ -276,7 +330,9 @@ export default function AddSpacePage() {
                       <Checkbox
                         id="outdoor"
                         checked={formData.outdoor}
-                        onCheckedChange={(checked) => updateFormData("outdoor", checked)}
+                        onCheckedChange={(checked) =>
+                          updateFormData("outdoor", checked)
+                        }
                       />
                       <Label htmlFor="outdoor">Outdoor Space</Label>
                     </div>
@@ -286,7 +342,9 @@ export default function AddSpacePage() {
                       <Checkbox
                         id="wifi"
                         checked={formData.wifi}
-                        onCheckedChange={(checked) => updateFormData("wifi", checked)}
+                        onCheckedChange={(checked) =>
+                          updateFormData("wifi", checked)
+                        }
                       />
                       <Label htmlFor="wifi">Free WiFi</Label>
                     </div>
@@ -294,7 +352,9 @@ export default function AddSpacePage() {
                       <Checkbox
                         id="parking"
                         checked={formData.parking}
-                        onCheckedChange={(checked) => updateFormData("parking", checked)}
+                        onCheckedChange={(checked) =>
+                          updateFormData("parking", checked)
+                        }
                       />
                       <Label htmlFor="parking">Parking Available</Label>
                     </div>
@@ -304,10 +364,15 @@ export default function AddSpacePage() {
 
               {/* Accessibility Features */}
               <div className="space-y-4">
-                <Label className="text-base font-medium">Accessibility Features</Label>
+                <Label className="text-base font-medium">
+                  Accessibility Features
+                </Label>
                 <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-3">
                   {accessibilityFeatures.map((feature) => (
-                    <div key={feature.id} className="flex items-center space-x-2">
+                    <div
+                      key={feature.id}
+                      className="flex items-center space-x-2"
+                    >
                       <Checkbox
                         id={feature.id}
                         checked={formData.features.includes(feature.id)}
@@ -340,5 +405,5 @@ export default function AddSpacePage() {
         </Card>
       </div>
     </div>
-  )
+  );
 }
