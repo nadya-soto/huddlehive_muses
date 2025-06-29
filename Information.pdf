@@ -1,0 +1,116 @@
+Link to presentation
+
+https://www.canva.com/design/DAGrq4mGlz0/XWAKAC7h49GYy2vt4miWnw/edit?utm_content=DAGrq4mGlz0&utm_campaign=designshare&utm_medium=link2&utm_source=sharebutton
+
+Framing the Problem
+Use case 1: A city of spaces, but none for me
+
+My name is Mara, I’m 29 years old, I’m an artist, and my company just transferred me to London. I like observing the life of neighbourhoods, walking slowly, taking photos with my phone… and I almost always go with Tomi, my emotional support dog. He helps me regulate when there are too many stimulus, too many stares, too much noise.
+
+Being neurodivergent isn’t something you can see on the outside, but it affects everything. New spaces overwhelm me. Large groups drain me. And even though I know I need community, it’s not as easy as saying “join a workshop” or “go to a cultural café.” Most of the time, I don’t know where to go, if I’ll be accepted, or if I’ll be able to stay until an anxiety attack passes without being looked at strangely.
+
+I’ve tried to find quiet places to paint, spaces where I could run a small collage workshop, or simply sit and read without being asked to leave because I’m with my dog. But the announcements are scattered on Facebook, on posters taped to poles, or there’s just no way of knowing if that space is for me.
+
+Once I went to a "community room," but they told me dogs weren’t allowed. Another time I went to a park because I thought it would be perfect for me and my dog, but again too much noise, and my dog wasn’t allowed off-leash. I tried joining a writing circle, but I felt out of place because I didn’t know who to ask if I could leave if I felt overwhelmed, or if there was a quiet room nearby. I don’t know how to find suitable spaces, close to me, where I’ll feel safe and Tomi is welcome.
+Use case 2: A Place for everyone that no one knows about
+
+My name is Ellen, I’m 50 years old, and ever since I was a child, I dreamed of having a library. Not just a place to sell books, but a refuge. A space where anyone , no matter how they think, how they move, who they love, or how much silence they need, could walk in, sit down, borrow a book, and feel like they belong.
+
+After years of working and saving, I opened The Nomi, a small library-style bookshop on a quiet street, away from the noise. I wanted it to be safe, kind, accessible. And I poured my heart into every detail.
+
+    We made the entrance step-free, with automatic doors for wheelchairs and pushchairs.
+
+    We adapted the bathroom with grab bars and plenty of space.
+
+    I invested in a small section with Braille books and carefully selected audio-books.
+
+    We softened the lighting and painted the walls in calming tones.
+
+    We created a reading corner where people can sit and read, without buying anything, and even borrow books for a week.
+
+    And yes, there’s a clear policy: assistance and emotional support dogs are always welcome.
+
+We even have a chalkboard out front where we note if the day will be quieter or busier, so people who need to prepare can feel more in control.
+
+But there’s one thing I haven’t been able to solve: visibility.
+
+
+The Nomi isn’t on a busy commercial street. I chose it on purpose, to be peaceful, calm, not overwhelming. But that means very few people stumble upon it by chance. And many of the people I created this space for… don’t even know it exists. Yes, we’re on Google. But still, no one comes. I’ve tried posting on social media, but I don’t know how to use those platforms well. I’ve reached out to some organizations, but haven’t had much response. Some days, hours go by and no one walks in. Not because they don’t need this kind of space, but because we just haven’t found each other yet. I know there are people out there like me, who grew up feeling out of place, or who now look for gentle spaces for their neurodivergent children, for their elderly parents, or for themselves.
+
+My doors are already open, I just need to be found.
+
+Idea Explanation
+
+Our solution is for people like Mara and Elena: Mara is looking for a safe place where she can paint in peace, with her assistance dog by her side, Elena created a cozy, welcoming space, but the people who need it most don’t even know it exists. They don’t know each other. But they should.
+
+Hidden Spaces is that bridge, the one that connects people with places, communities with resources. needs with real solutions.
+
+Add spaces. Share them. Discover them. Your perfect third space is just one click away.
+
+And yes, the city can belong to you.
+
+That’s where Hidden Spaces comes in - A platform that connects people with inclusive, welcoming urban spaces, based on real needs.
+
+Whether you plan ahead or improvise last minute, Hidden Spaces helps you find your ideal spot:
+
+    Pet-friendly cafés
+
+    Step-free access
+
+    Quiet reading corners in libraries
+
+    Spaces to create, breathe, or simply be — no purchase, no pressure
+
+    Inclusive restrooms and more...
+
+Because it’s not just about maps.
+It’s about access, belonging, and reconnecting with your city.
+
+Implementation
+
+The frontend, built with React and typescript, is responsible for displaying the interface and handling user interactions. When a user performs an action, like logging in, signing up, viewing saved spaces, or editing their profile.
+
+The backend receives these requests, processes them (e.g., verifying user credentials, retrieving or modifying data), and then responds with the necessary information or confirmation. This was implemented using Flask (Python).
+
+The database, was implemented with MySQL, is connected to the backend and stores all the persistent data, such as user accounts, saved spaces, and space details. The backend handles all the communication with the database using SQL queries.
+
+In the future, we also plan to move some features like map rendering or advanced search into the backend to improve scalability and performance.
+
+Challenges
+
+    This was our first hackathon, and one of the first challenges was choosing a theme. Turning our abstract and ambitious ideas into a functional prototype wasn’t easy. After a brainstorming session on the three main challenges, we decided to go with the one where our ideas felt the strongest. We arrived at a clear vision of how we could solve the second challenge and immediately got to work.
+
+    Our second challenge was defining tasks. We all have similar skills, but each of us brings something unique in personality and experience. We discussed our strengths and distributed tasks accordingly:backend, frontend, design. Once we divided the work, everything became much more manageable.
+
+    One of the biggest technical challenges was getting the frontend to communicate properly with the backend. We had to make sure all the endpoints matched and the data structure was consistent. It required patience, reading error messages carefully, and lots of trial and error until everything finally synced. Special mention to Eleni, who handled the final steps of solving this issue. Another challenge we faced was connecting to the database. At first, it wasn’t working because the tables weren’t properly defined. We decided to manually create and test the database structure, and once everything was aligned, the connection worked seamlessly.
+
+    We had to quickly learn how to identify which tasks were most important. We talked with mentors and prioritized the features that would have the most impact. We unified our vision to make it both realistic and achievable. Working under pressure helped us grow our technical and teamwork skills. and above all, we learned a lot and truly enriched our experience.
+
+Accomplishments
+
+We learned how to work as a team, share ideas clearly, and focus on what matters most.
+We assigned roles, divided tasks, and stayed active and organized. We also started building our project using new tools like Flask and wrote Python backend code. Together, we successfully connected the backend and frontend, which helped the whole project run more smoothly and efficiently.
+
+Next Steps
+
+    User Research & Validation
+
+        Interview stakeholders: community organizers, local governments, venue owners, and underrepresented groups.
+
+        Map user personas and journey pain points (e.g., booking friction, safety concerns, digital access gaps).
+
+    Add map integration to the backend and frontend so users can see the locations of community spaces visually. We started working on this but didn’t finish it in this phase.
+
+    Improve the user interface by refining the design and making it more accessible, especially for people with disabilities.
+
+    Improve backend functionality, including better error handling, user role management, and stronger authentication.
+
+    Allow image uploads
+
+    Add more filtering and search features on the Discover page to help users find spaces that suit their needs.
+
+    Redesign the user experience in a “match app” style, where users can swipe or browse through spaces in a more interactive, personalized way, making the discovery process more intuitive and fun.
+
+    Allow space reservations for workshops, matches, meetings, or regular use
+
+    Include comments, recommendations, or community tagging
