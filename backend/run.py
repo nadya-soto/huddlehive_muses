@@ -127,7 +127,6 @@ def create_space():
     # Create or get a default user for development
     user = User.query.first()
     if not user:
-        # Create a default user with all required fields
         user = User(username="dev_user", email="dev@example.com", password="dev_password")
         db.session.add(user)
         db.session.commit()
